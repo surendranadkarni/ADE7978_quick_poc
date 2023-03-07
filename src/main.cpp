@@ -143,10 +143,24 @@ void IRQ1_irq(){
 
 }
 
+const uint32_t MASK0_DREADY = (1U<<17);
 
+const uint32_t MASK1_ZERO_CROSSING_VOLTAGE = (1U<<9);
+const uint32_t MASK1_ZERO_CROSSING_CURRENT = (1U<<12);
 void ADE7978_reg_config()
 {
 
+  // Enable IRQ0
+  uint32_t mast0_val =  MASK0_DREADY;
+  ADE7978_SPI_WRITE(MASK0, mast0_val, 4);
+  Serial.print("MASK0 = ");
+  Serial.println(ADE7978_SPI_READ(MASK0,4), HEX);
+
+  //Enable IRQ1
+  uint32_t mast1_val =  MASK1_ZERO_CROSSING_VOLTAGE | MASK1_ZERO_CROSSING_CURRENT;
+  ADE7978_SPI_WRITE(MASK1, mast1_val, 4);
+  Serial.print("MASK1 = ");
+  Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
   //ADE7978_SPI_WRITE(AIGAIN, 0xFF800000, 4);
   ADE7978_SPI_WRITE(AIGAIN, 0x0, 4);
   Serial.print("AIGAIN = ");
