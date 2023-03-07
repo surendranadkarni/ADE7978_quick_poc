@@ -188,16 +188,16 @@ void ADE7978_reg_config()
   Serial.print("CVGAIN = ");
   Serial.println(ADE7978_SPI_READ(CVGAIN,4), HEX);
 
-
-  ADE7978_SPI_WRITE(WTHR, 3 , 1);
+ // VFS = 350 V IFS = 31 Amps. WTHR is 4
+  ADE7978_SPI_WRITE(WTHR, 4 , 1);
   Serial.print("WTHR = ");
   Serial.println(ADE7978_SPI_READ(WTHR,1), HEX);
 
-  ADE7978_SPI_WRITE(VARTHR, 3 , 1);
+  ADE7978_SPI_WRITE(VARTHR, 4 , 1);
   Serial.print("VARTHR = ");
   Serial.println(ADE7978_SPI_READ(VARTHR,1), HEX);
 
-  ADE7978_SPI_WRITE(VATHR, 3 , 1);
+  ADE7978_SPI_WRITE(VATHR, 4 , 1);
   Serial.print("VATHR = ");
   Serial.println(ADE7978_SPI_READ(VATHR,1), HEX);
 
