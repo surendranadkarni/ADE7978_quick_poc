@@ -221,9 +221,13 @@ void ADE7978_reg_config()
   Serial.print("CF3DEN = ");
   Serial.println(ADE7978_SPI_READ(CF3DEN,2), HEX);
 
+  ADE7978_SPI_WRITE(VLEVEL, 6086956 , 4);
+  Serial.print("VLEVEL = ");
+  Serial.println(ADE7978_SPI_READ(VLEVEL,4), DEC);
 
-
-
+  ADE7978_SPI_WRITE(VNOM, 2472045 , 4);
+  Serial.print("VNOM = ");
+  Serial.println(ADE7978_SPI_READ(VNOM,4), DEC);
 
   ADE7978_SPI_WRITE(RUN, 0x0001, 2); //write run bit
   Serial.print("RUN = ");
