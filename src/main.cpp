@@ -427,8 +427,8 @@ void setup() {
   //attachInterrupt(digitalPinToInterrupt(DREADY), READ_SAMPLE_ON_IRQ, FALLING );
     attachInterrupt(digitalPinToInterrupt(DREADY),dready_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(CF1),CF1_irq,FALLING); // response about 5.2us
-   attachInterrupt(digitalPinToInterrupt(CF2),CF2_irq,FALLING); // response about 5.2us
-   attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
+   //attachInterrupt(digitalPinToInterrupt(CF2),CF2_irq,FALLING); // response about 5.2us
+   //attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
 
