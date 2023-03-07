@@ -205,6 +205,9 @@ void READ_RMS_ENERGIES_PRINT()
   Serial.print(ADE7978_SPI_READ(AVRMS,4), DEC);
   Serial.print("  AWATT =  ");
   Serial.print(ADE7978_SPI_READ(AWATT,4), HEX);
+  Serial.print("  AWATTHR =  ");
+  Serial.print(ADE7978_SPI_READ(AWATTHR,4), HEX);
+
   return;
   Serial.print("  BIRM = ");
   Serial.print(ADE7978_SPI_READ(BIRMS,4), DEC);
