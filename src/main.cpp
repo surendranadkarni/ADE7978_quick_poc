@@ -130,12 +130,16 @@ void CF3_irq(){
 
 void IRQ0_irq(){
   irq0_cnt++;
- ADE7978_SPI_WRITE(STATUS0,ADE7978_SPI_READ(STATUS0, 4),4);   // read and clear irq
+  // read and clear irq
+ auto val = ADE7978_SPI_READ(STATUS0, 4);
+ ADE7978_SPI_WRITE(STATUS0, ~val ,4);
 }
 
 void IRQ1_irq(){
   irq1_cnt++;
-   ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  // read and clear irq
+  // read and clear irq
+  auto val = ADE7978_SPI_READ(STATUS1, 4);
+  ADE7978_SPI_WRITE(STATUS1, ~val, 4);
 
 }
 
