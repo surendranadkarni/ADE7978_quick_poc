@@ -337,6 +337,7 @@ void setup() {
   SPI.setDataMode(SPI_MODE3); //Set the SPI_2 data mode 0
   SPI.setClockDivider(SPI_CLOCK_DIV16);      // Slow speed (72 / 16 = 4.5 MHz SPI_1 speed)
 #endif
+  delay(1000);
   //outputs
   pinMode(SSB_A, OUTPUT);
   pinMode(RESET_B, OUTPUT);
@@ -360,7 +361,11 @@ void setup() {
   delay(10);
   digitalWrite(RESET_B, HIGH);
   Serial.println("Waiting for chip to start\n");
+  last_millis = millis();
   while( digitalRead(IRQ1) == 1);        //wait for reset done
+  auto time_elapsed = millis()-last_millis;
+  Serial.print("Took time:");
+  Serial.println(time_elapsed);
   ADE7978_SPI_WRITE(STATUS1,0xffffffff,0x4);
 
   //set spi port TOGGLE SSB 3 TIMES
@@ -384,12 +389,12 @@ void setup() {
 
   //attachInterrupt(digitalPinToInterrupt(DREADY), READ_RMS_AVERAGE_PRINT, FALLING );
   //attachInterrupt(digitalPinToInterrupt(DREADY), READ_SAMPLE_ON_IRQ, FALLING );
-    //attachInterrupt(digitalPinToInterrupt(DREADY),dready_irq,FALLING); // response about 5.2us
+    attachInterrupt(digitalPinToInterrupt(DREADY),dready_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(CF1),CF1_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(CF2),CF2_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
-   //attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
-   //attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
+   attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
+   attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
 
    Serial.println("Setup completed\n");
 }
