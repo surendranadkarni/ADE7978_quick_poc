@@ -189,20 +189,35 @@ void ADE7978_reg_config()
   Serial.println(ADE7978_SPI_READ(CVGAIN,4), HEX);
 
 
+  ADE7978_SPI_WRITE(WTHR, 3 , 1);
+  Serial.print("WTHR = ");
+  Serial.println(ADE7978_SPI_READ(WTHR,1), HEX);
 
-   ADE7978_SPI_WRITE(CFMODE, 0x0088 , 2);
+  ADE7978_SPI_WRITE(VARTHR, 3 , 1);
+  Serial.print("VARTHR = ");
+  Serial.println(ADE7978_SPI_READ(VARTHR,1), HEX);
+
+  ADE7978_SPI_WRITE(VATHR, 3 , 1);
+  Serial.print("VATHR = ");
+  Serial.println(ADE7978_SPI_READ(VATHR,1), HEX);
+
+
+  ADE7978_SPI_WRITE(CFMODE, 0x0288 , 2);
   Serial.print("CFMODE = ");
   Serial.println(ADE7978_SPI_READ(CFMODE,2), HEX);
 
-   ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
+  //ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
+  ADE7978_SPI_WRITE(CF1DEN, 0x3ED , 2);
   Serial.print("CF1DEN = ");
   Serial.println(ADE7978_SPI_READ(CF1DEN,2), HEX);
 
-   ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
+  //ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
+   ADE7978_SPI_WRITE(CF2DEN, 0x3ED , 2);
   Serial.print("CF2DEN = ");
   Serial.println(ADE7978_SPI_READ(CF2DEN,2), HEX);
 
-   ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
+  //ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
+  ADE7978_SPI_WRITE(CF3DEN, 0x3ED , 2);
   Serial.print("CF3DEN = ");
   Serial.println(ADE7978_SPI_READ(CF3DEN,2), HEX);
 
