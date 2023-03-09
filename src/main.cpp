@@ -129,20 +129,6 @@ void CF3_irq(){
  CF3_COUNT++;
 }
 
-void IRQ0_irq_old(){
-  irq0_cnt++;
-  // read and clear irq
- auto val = ADE7978_SPI_READ(STATUS0, 4);
- ADE7978_SPI_WRITE(STATUS0, ~val ,4);
-}
-
-void IRQ1_irq_old(){
-  irq1_cnt++;
-  // read and clear irq
-  auto val = ADE7978_SPI_READ(STATUS1, 4);
-  ADE7978_SPI_WRITE(STATUS1, ~val, 4);
-
-}
 
 void IRQ0_irq(){
   irq0_cnt++;
@@ -154,99 +140,6 @@ void IRQ1_irq(){
   //ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  // read and clear irq
   foo = true;
   irq1_cnt++;
-}
-
-const uint32_t MASK0_DREADY = (1U<<17);
-
-const uint32_t MASK1_ZERO_CROSSING_VOLTAGE = (1U<<9);
-const uint32_t MASK1_ZERO_CROSSING_CURRENT = (1U<<12);
-void ADE7978_reg_config1()
-{
-
-  // Enable IRQ0
-  uint32_t mast0_val =  MASK0_DREADY;
-  ADE7978_SPI_WRITE(MASK0, mast0_val, 4);
-  Serial.print("MASK0 = ");
-  Serial.println(ADE7978_SPI_READ(MASK0,4), HEX);
-
-  //Enable IRQ1
-  uint32_t mast1_val =  MASK1_ZERO_CROSSING_VOLTAGE | MASK1_ZERO_CROSSING_CURRENT;
-  ADE7978_SPI_WRITE(MASK1, mast1_val, 4);
-  Serial.print("MASK1 = ");
-  Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
-
-  //ADE7978_SPI_WRITE(AIGAIN, 0xFF800000, 4);
-  ADE7978_SPI_WRITE(AIGAIN, 0x0, 4);
-  Serial.print("AIGAIN = ");
-  Serial.println(ADE7978_SPI_READ(AIGAIN,4), HEX);
-
-  //ADE7978_SPI_WRITE(BIGAIN, 0xFF800000, 4);
-  ADE7978_SPI_WRITE(BIGAIN, 0x0, 4);
-  Serial.print("BIGAIN = ");
-  Serial.println(ADE7978_SPI_READ(BIGAIN,4), HEX);
-
-  //ADE7978_SPI_WRITE(CIGAIN, 0xFF800000, 4);
-  ADE7978_SPI_WRITE(CIGAIN, 0x0, 4);
-  Serial.print("CIGAIN = ");
-  Serial.println(ADE7978_SPI_READ(CIGAIN,4), HEX);
-
-  ADE7978_SPI_WRITE(AVGAIN, 0x0 , 4);
-  Serial.print("AVGAIN = ");
-  Serial.println(ADE7978_SPI_READ(AVGAIN,4), HEX);
-
-  ADE7978_SPI_WRITE(BVGAIN, 0x0 , 4);
-  Serial.print("BVGAIN = ");
-  Serial.println(ADE7978_SPI_READ(BVGAIN,4), HEX);
-
-  ADE7978_SPI_WRITE(CVGAIN, 0x0 , 4);
-  Serial.print("CVGAIN = ");
-  Serial.println(ADE7978_SPI_READ(CVGAIN,4), HEX);
-
- // VFS = 350 V IFS = 31 Amps. WTHR is 4
-  ADE7978_SPI_WRITE(WTHR, 3 , 1);
-  Serial.print("WTHR = ");
-  Serial.println(ADE7978_SPI_READ(WTHR,1), HEX);
-
-  ADE7978_SPI_WRITE(VARTHR, 3 , 1);
-  Serial.print("VARTHR = ");
-  Serial.println(ADE7978_SPI_READ(VARTHR,1), HEX);
-
-  ADE7978_SPI_WRITE(VATHR, 3 , 1);
-  Serial.print("VATHR = ");
-  Serial.println(ADE7978_SPI_READ(VATHR,1), HEX);
-
-
-  ADE7978_SPI_WRITE(CFMODE, 0x88 , 2);
-  Serial.print("CFMODE = ");
-  Serial.println(ADE7978_SPI_READ(CFMODE,2), HEX);
-
-  //ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
-  ADE7978_SPI_WRITE(CF1DEN, 10 , 2);
-  Serial.print("CF1DEN = ");
-  Serial.println(ADE7978_SPI_READ(CF1DEN,2), HEX);
-
-  //ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
-   ADE7978_SPI_WRITE(CF2DEN, 10 , 2);
-  Serial.print("CF2DEN = ");
-  Serial.println(ADE7978_SPI_READ(CF2DEN,2), HEX);
-
-  //ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
-  ADE7978_SPI_WRITE(CF3DEN, 10 , 2);
-  Serial.print("CF3DEN = ");
-  Serial.println(ADE7978_SPI_READ(CF3DEN,2), HEX);
-
-  ADE7978_SPI_WRITE(VLEVEL, 6086956 , 4);
-  Serial.print("VLEVEL = ");
-  Serial.println(ADE7978_SPI_READ(VLEVEL,4), DEC);
-
-  ADE7978_SPI_WRITE(VNOM, 2472045 , 4);
-  Serial.print("VNOM = ");
-  Serial.println(ADE7978_SPI_READ(VNOM,4), DEC);
-
-  ADE7978_SPI_WRITE(RUN, 0x0001, 2); //write run bit
-  Serial.print("RUN = ");
-  Serial.println(ADE7978_SPI_READ(RUN,2), HEX);
-
 }
 
 void ADE7978_reg_config()
@@ -524,9 +417,9 @@ void setup() {
    //attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
-  ADE7978_SPI_WRITE(MASK1, 0x200 , 4);  //200 hex = channel a zerocross IRQ
-  Serial.print("MASK1 = ");
-  Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
+  //ADE7978_SPI_WRITE(MASK1, 0x200 , 4);  //200 hex = channel a zerocross IRQ
+  //Serial.print("MASK1 = ");
+  //Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
 
    Serial.println("Setup completed\n");
 }
