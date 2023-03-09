@@ -109,11 +109,12 @@ int last_millis = 0;
 double IRMS_AVE;
 
 
-
+auto foo = false;
 
 
 void dready_irq(){
  DREADY_COUNT++;
+  //ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  // read and clear irq
 }
 
 void CF1_irq(){
@@ -128,14 +129,14 @@ void CF3_irq(){
  CF3_COUNT++;
 }
 
-void IRQ0_irq(){
+void IRQ0_irq_old(){
   irq0_cnt++;
   // read and clear irq
  auto val = ADE7978_SPI_READ(STATUS0, 4);
  ADE7978_SPI_WRITE(STATUS0, ~val ,4);
 }
 
-void IRQ1_irq(){
+void IRQ1_irq_old(){
   irq1_cnt++;
   // read and clear irq
   auto val = ADE7978_SPI_READ(STATUS1, 4);
@@ -143,11 +144,23 @@ void IRQ1_irq(){
 
 }
 
+void IRQ0_irq(){
+  irq0_cnt++;
+  //auto val = ADE7978_SPI_READ(STATUS0, 4);
+  //ADE7978_SPI_WRITE(STATUS0, ~val, 4);
+}
+
+void IRQ1_irq(){
+  //ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  // read and clear irq
+  foo = true;
+  irq1_cnt++;
+}
+
 const uint32_t MASK0_DREADY = (1U<<17);
 
 const uint32_t MASK1_ZERO_CROSSING_VOLTAGE = (1U<<9);
 const uint32_t MASK1_ZERO_CROSSING_CURRENT = (1U<<12);
-void ADE7978_reg_config()
+void ADE7978_reg_config1()
 {
 
   // Enable IRQ0
@@ -161,6 +174,7 @@ void ADE7978_reg_config()
   ADE7978_SPI_WRITE(MASK1, mast1_val, 4);
   Serial.print("MASK1 = ");
   Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
+
   //ADE7978_SPI_WRITE(AIGAIN, 0xFF800000, 4);
   ADE7978_SPI_WRITE(AIGAIN, 0x0, 4);
   Serial.print("AIGAIN = ");
@@ -189,35 +203,35 @@ void ADE7978_reg_config()
   Serial.println(ADE7978_SPI_READ(CVGAIN,4), HEX);
 
  // VFS = 350 V IFS = 31 Amps. WTHR is 4
-  ADE7978_SPI_WRITE(WTHR, 4 , 1);
+  ADE7978_SPI_WRITE(WTHR, 3 , 1);
   Serial.print("WTHR = ");
   Serial.println(ADE7978_SPI_READ(WTHR,1), HEX);
 
-  ADE7978_SPI_WRITE(VARTHR, 4 , 1);
+  ADE7978_SPI_WRITE(VARTHR, 3 , 1);
   Serial.print("VARTHR = ");
   Serial.println(ADE7978_SPI_READ(VARTHR,1), HEX);
 
-  ADE7978_SPI_WRITE(VATHR, 4 , 1);
+  ADE7978_SPI_WRITE(VATHR, 3 , 1);
   Serial.print("VATHR = ");
   Serial.println(ADE7978_SPI_READ(VATHR,1), HEX);
 
 
-  ADE7978_SPI_WRITE(CFMODE, 0x0288 , 2);
+  ADE7978_SPI_WRITE(CFMODE, 0x88 , 2);
   Serial.print("CFMODE = ");
   Serial.println(ADE7978_SPI_READ(CFMODE,2), HEX);
 
   //ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
-  ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
+  ADE7978_SPI_WRITE(CF1DEN, 10 , 2);
   Serial.print("CF1DEN = ");
   Serial.println(ADE7978_SPI_READ(CF1DEN,2), HEX);
 
   //ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
-   ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
+   ADE7978_SPI_WRITE(CF2DEN, 10 , 2);
   Serial.print("CF2DEN = ");
   Serial.println(ADE7978_SPI_READ(CF2DEN,2), HEX);
 
   //ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
-  ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
+  ADE7978_SPI_WRITE(CF3DEN, 10 , 2);
   Serial.print("CF3DEN = ");
   Serial.println(ADE7978_SPI_READ(CF3DEN,2), HEX);
 
@@ -232,6 +246,80 @@ void ADE7978_reg_config()
   ADE7978_SPI_WRITE(RUN, 0x0001, 2); //write run bit
   Serial.print("RUN = ");
   Serial.println(ADE7978_SPI_READ(RUN,2), HEX);
+
+}
+
+void ADE7978_reg_config()
+{
+
+  //ADE7978_SPI_WRITE(AIGAIN, 0xFF800000, 4);
+  ADE7978_SPI_WRITE(AIGAIN, 0x0, 4);
+  Serial.print("AIGAIN = ");
+  Serial.println(ADE7978_SPI_READ(AIGAIN,4), HEX);
+
+  //ADE7978_SPI_WRITE(BIGAIN, 0xFF800000, 4);
+  ADE7978_SPI_WRITE(BIGAIN, 0x0, 4);
+  Serial.print("BIGAIN = ");
+  Serial.println(ADE7978_SPI_READ(BIGAIN,4), HEX);
+
+  //ADE7978_SPI_WRITE(CIGAIN, 0xFF800000, 4);
+  ADE7978_SPI_WRITE(CIGAIN, 0x0, 4);
+  Serial.print("CIGAIN = ");
+  Serial.println(ADE7978_SPI_READ(CIGAIN,4), HEX);
+
+  ADE7978_SPI_WRITE(AVGAIN, 0x0 , 4);
+  Serial.print("AVGAIN = ");
+  Serial.println(ADE7978_SPI_READ(AVGAIN,4), HEX);
+
+  ADE7978_SPI_WRITE(BVGAIN, 0x0 , 4);
+  Serial.print("BVGAIN = ");
+  Serial.println(ADE7978_SPI_READ(BVGAIN,4), HEX);
+
+  ADE7978_SPI_WRITE(CVGAIN, 0x0 , 4);
+  Serial.print("CVGAIN = ");
+  Serial.println(ADE7978_SPI_READ(CVGAIN,4), HEX);
+
+
+  ADE7978_SPI_WRITE(CFMODE, 0x0088 , 2);
+  Serial.print("CFMODE = ");
+  Serial.println(ADE7978_SPI_READ(CFMODE,2), HEX);
+
+  ADE7978_SPI_WRITE(CF1DEN, 0x283d , 2);
+  Serial.print("CF1DEN = ");
+  Serial.println(ADE7978_SPI_READ(CF1DEN,2), HEX);
+
+  ADE7978_SPI_WRITE(CF2DEN, 0x283d , 2);
+  Serial.print("CF2DEN = ");
+  Serial.println(ADE7978_SPI_READ(CF2DEN,2), HEX);
+
+  ADE7978_SPI_WRITE(CF3DEN, 0x283d , 2);
+  Serial.print("CF3DEN = ");
+  Serial.println(ADE7978_SPI_READ(CF3DEN,2), HEX);
+
+  //ADE7978_SPI_WRITE(MASK1, 0x200 , 4);  //200 hex = channel a zerocross IRQ
+  Serial.print("MASK1 = ");
+  Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
+
+
+  //setup for linecycle mode//
+
+
+   ADE7978_SPI_WRITE(LINECYC,100,2);  // 100 half linecycles or 2 sec at 50Hz  120 half line cycles at 60hz for 2 sec
+  Serial.print("LINECYC = ");
+  Serial.println(ADE7978_SPI_READ(LINECYC,2), HEX);
+
+  ADE7978_SPI_WRITE(LCYCMODE, 0x0F ,1);  // enable ZXA for linecycle accumulation set bit (3) clr (4)(5) , disable read with reset clr bit(6) ,enable linecycle mode watt(0) var(1) va(2)
+  Serial.print("LCYCMODE = ");
+  Serial.println(ADE7978_SPI_READ(LCYCMODE,1), HEX);
+
+
+  ADE7978_SPI_WRITE(AWATTHR, 0x0000, 4); //write run bit
+  Serial.print("RUN = ");
+  Serial.println(ADE7978_SPI_READ(AWATTHR,2), HEX);
+
+  ADE7978_SPI_WRITE(RUN, 0x0001, 2); //write run bit
+  Serial.print("RUN = ");
+  Serial.println(ADE7978_SPI_READ(RUN,2), HEX);
 }
 
 void READ_RMS_ENERGIES_PRINT()
@@ -241,10 +329,10 @@ void READ_RMS_ENERGIES_PRINT()
   Serial.print("  AVRMS =  ");
   Serial.print(ADE7978_SPI_READ(AVRMS,4), DEC);
   Serial.print("  AWATT =  ");
-  Serial.print(ADE7978_SPI_READ(AWATT,4), HEX);
+  Serial.print(ADE7978_SPI_READ(AWATT,4), DEC);
   Serial.print("  AWATTHR =  ");
-  Serial.print(ADE7978_SPI_READ(AWATTHR,4), HEX);
-
+  Serial.print(ADE7978_SPI_READ(AWATTHR,4), DEC);
+  Serial.println(" ");
   return;
   Serial.print("  BIRM = ");
   Serial.print(ADE7978_SPI_READ(BIRMS,4), DEC);
@@ -426,7 +514,8 @@ void setup() {
 
 
   ADE7978_reg_config();
-
+   ADE7978_SPI_WRITE(STATUS0,ADE7978_SPI_READ(STATUS0, 4),4);   //important after settign up attach IRQ0
+   ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  //important after settign up attach IRQ1
   //attachInterrupt(digitalPinToInterrupt(DREADY), READ_RMS_AVERAGE_PRINT, FALLING );
   //attachInterrupt(digitalPinToInterrupt(DREADY), READ_SAMPLE_ON_IRQ, FALLING );
     attachInterrupt(digitalPinToInterrupt(DREADY),dready_irq,FALLING); // response about 5.2us
@@ -435,12 +524,15 @@ void setup() {
    //attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
    attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
+  ADE7978_SPI_WRITE(MASK1, 0x200 , 4);  //200 hex = channel a zerocross IRQ
+  Serial.print("MASK1 = ");
+  Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
 
    Serial.println("Setup completed\n");
 }
 
 
-void loop() {
+void loop1() {
 
     if(millis()-last_millis >= 1000)
     {
@@ -466,5 +558,40 @@ void loop() {
 
     Serial.println(" ");
     }
+
+}
+
+void loop() {
+    if(foo)
+    {
+      foo = false;
+      ADE7978_SPI_WRITE(STATUS1,ADE7978_SPI_READ(STATUS1, 4),4);  //important after settign up attach IRQ1
+    }
+
+
+
+     if(millis()-last_millis >= 1000)
+    {
+      if( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
+      {
+      ADE7978_SPI_WRITE(STATUS0,32,4);
+      READ_RMS_ENERGIES_PRINT();
+      }
+      Serial.print("CF1_COUNT = ");
+      Serial.println(CF1_COUNT);
+      Serial.print("CF2_COUNT = ");
+      Serial.println(CF2_COUNT);
+      Serial.print("CF3_COUNT = ");
+      Serial.println(CF3_COUNT);
+      Serial.print("DREADY CNT = ");
+      Serial.println(DREADY_COUNT);
+      Serial.print("irq1_cnt = ");
+      Serial.println(irq1_cnt);
+      Serial.print("irq0_cnt = ");
+      Serial.println(irq0_cnt);
+      last_millis = millis();
+      Serial.println(" ");
+    }
+
 
 }
