@@ -330,14 +330,13 @@ uint32_t ADE7978_SPI_READ (uint16_t Address, uint8_t Number_of_bytes)
   return j;
 }
 
-
-void calibrate_ade7978(){
+void calibrate_ade7978() {
 
   delay(10000); //wait for RMS to settle
 
-// enter values
-  double V_TEST = 222;//volts RMS
-  double I_TEST = 8.6;//Amps RMS
+  // enter values
+  double V_TEST = 220.5;//volts RMS
+  double I_TEST = 8.8;//Amps RMS
   double Power_factor = 1;
   int meter_constant = 1000;  //1000 imp/Kwh for cf output rate
   int Line_Freq = 50;
@@ -347,128 +346,140 @@ void calibrate_ade7978(){
   double R1 = 1000000; //big resistor or sum of upper resisters
   double R2 = 1000; //small resistor
 
-  double Shunt_value_in_ohms = 0.000500; // for 540uOhms
+  double Shunt_value_in_ohms = 0.000500; // for 200uOhms
 
-//constants
-  #define  PMAX 26991271
-  #define  Sample_Rate 8000
-  #define  WTHR_Value 3
-  #define  I_channel_ADC_FS  .02209375
-  #define  V_channel_ADC_FS  .3535
-  #define  RMS_FS_Codes 3761808
+  //constants
+#define  PMAX 26991271
+#define  Sample_Rate 8000
+#define  WTHR_Value 3
+#define  I_channel_ADC_FS  .02209375
+#define  V_channel_ADC_FS  .3535
+#define  RMS_FS_Codes 3761808
 
 
-//calculated
-  double Percent_FS_Voltage = (((R2 /(R1 + R2))* V_TEST) / V_channel_ADC_FS);
+  //calculated
+  double Percent_FS_Voltage = (((R2 / (R1 + R2)) * V_TEST) / V_channel_ADC_FS);
   double Percent_FS_Current = (I_TEST * Shunt_value_in_ohms) / I_channel_ADC_FS;
-  double V_Fullscale = V_TEST/Percent_FS_Voltage;
-  double I_Fullscale = 10/Percent_FS_Current;
-  double Expected_CF_Freq = (meter_constant/1000 * V_TEST * I_TEST * Power_factor)/3600;
+  double V_Fullscale = V_TEST / Percent_FS_Voltage;
+  double I_Fullscale = I_TEST / Percent_FS_Current;
+  double Expected_CF_Freq = (meter_constant / 1000 * V_TEST * I_TEST * Power_factor) / 3600;
   double IRMS_LSB = 0;
   double VRMS_LSB = 0;
   double WATT_LSB = 0;
-  double KWH_LSB =0;
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//note the datasheet specs CF freq with wthr =3 and cfden=1 is 68.8Khz this may be incorrect and will cause errors in cf output after cfden is written
-//The number I get is 68651 x3 for Wthr = 205953 which is what I am usign below. After cfden is written expected cf is on cf pin
-//see page 8 of https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf spec table
-//see page 8 of https://www.analog.com/media/en/technical-documentation/application-notes/AN-1259.pdf
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  uint16_t CFDEN_CAL_VALUE = (uint16_t)((205953/WTHR_Value) * Power_factor * Percent_FS_Voltage * Percent_FS_Current)/Expected_CF_Freq;
-  int32_t AIGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Current) / (double)ADE7978_SPI_READ(AIRMS,4))-1)* 8388608); // 2^23 = 8388608
-  int32_t AVGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Voltage) / (double)ADE7978_SPI_READ(AVRMS,4))-1)* 8388608); // 2^23 = 8388608
+  double KWH_LSB = 0;
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  //note the datasheet specs CF freq with wthr =3 and cfden=1 is 68.8Khz this may be incorrect and will cause errors in cf output after cfden is written
+  //The number I get is 68651 x 3 for Wthr = 205953 which is what I am using below. After cfden is written expected cf is on cf pin
+  //see page 8 of https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf spec table
+  //see page 8 of https://www.analog.com/media/en/technical-documentation/application-notes/AN-1259.pdf
+  // The 205593 comes from setting the  WTHR=3, CFDEN =1, AWATTOS = PMAX = 0x19BDAA7, AIGAIN = AVGAIN = 0xFF800000 , CFMODE= 0x0088, RUN = 0x1 measure CF freq with counter
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  uint16_t CFDEN_CAL_VALUE = (uint16_t)((205953 / WTHR_Value) * Power_factor * Percent_FS_Voltage * Percent_FS_Current) / Expected_CF_Freq;
+  int32_t AIGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Current) / (double)ADE7978_SPI_READ(AIRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
+  int32_t AVGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Voltage) / (double)ADE7978_SPI_READ(AVRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
 
-        Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS,4) ); Serial.println(" IRMS");
-        Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS,4)); Serial.println(" VRMS");
-
-  Serial.println("");
-  Serial.print("V_TEST used for cal = ");Serial.println(V_TEST);
-  Serial.print("I_TEST used for cal = ");Serial.println(I_TEST);
-  Serial.print("Power_factor used for cal = ");Serial.println(Power_factor);
-  Serial.print("Line_Freq used for cal = ");Serial.println(Line_Freq);
-  Serial.print("accumulation_time used for cal = ");Serial.println(accumulation_time);
-  Serial.println("");
-
-  Serial.print("VTEST = ");Serial.print(Percent_FS_Voltage*100,2);Serial.print("% ");Serial.print(V_Fullscale,2);Serial.println(" VRMS Fullscale");
-  Serial.print("I %FS = ");Serial.print(Percent_FS_Current*100,2);Serial.print("% ");Serial.print(I_Fullscale,2);Serial.println(" IRMS Fullscale");
 
   Serial.println("");
-  Serial.print("Expected_CF_Freq = ");Serial.println(Expected_CF_Freq,6);
-  Serial.print("CFDEN_CAL_VALUE = ");Serial.println(CFDEN_CAL_VALUE);
+  Serial.print("  V_TEST Used For Calibration = "); Serial.println(V_TEST);
+  Serial.print("  I_TEST Used For Calibration = "); Serial.println(I_TEST);
+  Serial.print("  Power_factor Used For Calibration = "); Serial.println(Power_factor);
+  Serial.print("  Line_Freq Used For Calibration = "); Serial.println(Line_Freq);
+  Serial.print("  Accumulation Time Used For Calibration = "); Serial.println(accumulation_time);
   Serial.println("");
 
-  ADE7978_SPI_WRITE(CF1DEN,CFDEN_CAL_VALUE,2);
-  ADE7978_SPI_WRITE(CF2DEN,CFDEN_CAL_VALUE,2);
-  ADE7978_SPI_WRITE(CF3DEN,CFDEN_CAL_VALUE,2);
-
-  Serial.print(" AIRMS RAW = "); Serial.println(ADE7978_SPI_READ(AIRMS,4), DEC);
-  Serial.print(" AVRMS RAW  = "); Serial.println(ADE7978_SPI_READ(AVRMS,4), DEC);
+  Serial.print("  Vlevel Calculated Register Value = "); Serial.println((uint32_t)((V_Fullscale / V_TEST) * 4000000), HEX);
   Serial.println("");
-  Serial.print("AIGAIN_CAL_VALUE ");Serial.println(AIGAIN_CAL_VALUE);
-  Serial.print("AVGAIN_CAL_VALUE ");Serial.println(AVGAIN_CAL_VALUE);
+
+  ADE7978_SPI_WRITE(VLEVEL, (uint32_t)((V_Fullscale / V_TEST) * 4000000), 4);
+
+  Serial.print("  V_TEST = "); Serial.print(Percent_FS_Voltage * 100, 2); Serial.print("% Fullscale"); Serial.print(" = "); Serial.print(V_channel_ADC_FS * Percent_FS_Voltage,4);Serial.print(" VRMS at ADC input and ");Serial.print(V_Fullscale, 2); Serial.println(" VRMS Fullscale");
+  Serial.print("  I_TEST = "); Serial.print(Percent_FS_Current * 100, 2); Serial.print("% Fullscale"); Serial.print(" = "); Serial.print(I_channel_ADC_FS * Percent_FS_Current,4);Serial.print(" VRMS at ADC input and ");Serial.print(I_Fullscale, 2); Serial.println(" IRMS Fullscale");
+
+
+
+  Serial.println("");
+  Serial.print("  Expected_CF_Freq = "); Serial.println(Expected_CF_Freq, 6);
+  Serial.print("  CFDEN_CAL_VALUE = "); Serial.println(CFDEN_CAL_VALUE);
+  Serial.println("");
+
+  ADE7978_SPI_WRITE(CF1DEN, CFDEN_CAL_VALUE, 2);
+  ADE7978_SPI_WRITE(CF2DEN, CFDEN_CAL_VALUE, 2);
+  ADE7978_SPI_WRITE(CF3DEN, CFDEN_CAL_VALUE, 2);
+
+  Serial.print("  AIRMS Expected = "); Serial.println(Percent_FS_Current * RMS_FS_Codes ,0);
+  Serial.print("  AVRMS Expected = "); Serial.println(Percent_FS_Voltage * RMS_FS_Codes ,0);
+  Serial.print("  AIRMS RAW = "); Serial.println(ADE7978_SPI_READ(AIRMS, 4), DEC);
+  Serial.print("  AVRMS RAW = "); Serial.println(ADE7978_SPI_READ(AVRMS, 4), DEC);
+  Serial.println("");
+  Serial.print("  AIGAIN_CAL_VALUE "); Serial.println(AIGAIN_CAL_VALUE);
+  Serial.print("  AVGAIN_CAL_VALUE "); Serial.println(AVGAIN_CAL_VALUE);
   Serial.println("");
 
   ADE7978_SPI_WRITE(AIGAIN, AIGAIN_CAL_VALUE, 4);
   ADE7978_SPI_WRITE(AVGAIN, AVGAIN_CAL_VALUE, 4);
 
-  ADE7978_SPI_WRITE(LINECYC,(accumulation_time/(1.00/Line_Freq/2)),2);  // 300 half linecycles or 3 sec at 50Hz  360 half line cycles at 60hz for 3 sec
+  ADE7978_SPI_WRITE(AWATTHR, 0, 4);
 
-  Serial.print("LINECYCLES for "); Serial.print(accumulation_time); Serial.print(" SEC accumulation time = "); Serial.println(accumulation_time/(1.00/Line_Freq/2),4);
+  ADE7978_SPI_WRITE(LINECYC, (accumulation_time / (1.00 / Line_Freq / 2)), 2); // 300 half linecycles or 3 sec at 50Hz  360 half line cycles at 60hz for 3 sec
+
+  Serial.print("  LINECYCLES for "); Serial.print(accumulation_time); Serial.print(" SEC accumulation time = "); Serial.println(accumulation_time / (1.00 / Line_Freq / 2), 0);
 
   IRMS_LSB = I_TEST / (RMS_FS_Codes * Percent_FS_Current);
   VRMS_LSB = V_TEST / (RMS_FS_Codes * Percent_FS_Voltage);
-  WATT_LSB = (V_TEST*I_TEST)/(PMAX * Percent_FS_Current * Percent_FS_Voltage);
- while(1){
-   if( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
-     {
-        ADE7978_SPI_WRITE(STATUS0,32,4);
-        Serial.print("updated every "); Serial.print(accumulation_time/(1.00/Line_Freq/2)); Serial.println(" half lincycles ");
-        Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS,4) ); Serial.println(" IRMS");
-        Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS,4)); Serial.println(" VRMS");
-        Serial.print("  AWATT RAW = "); Serial.print(ADE7978_SPI_READ(AWATT,4)); Serial.println(" WATTS");
-        Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS,4) * IRMS_LSB); Serial.println(" IRMS");
-        Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS,4) * VRMS_LSB); Serial.println(" VRMS");
-        Serial.print("  AWATT = "); Serial.print(ADE7978_SPI_READ(AWATT,4)* 16 * WATT_LSB); Serial.println(" WATTS"); //div by 2^4 in figure 79 pg 57
+  WATT_LSB = (V_TEST * I_TEST) / (PMAX * Percent_FS_Current * Percent_FS_Voltage);
 
-        //https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // you can use expected (WATTHR / watthr register read) to calculate KWH/LSB.
+  /*
+    delay(accumulation_time * 1000);
+    //  need to wait for next accumulation time Watthr used for calculation
+    ADE7978_SPI_WRITE(STATUS0,32,4);
+    while( (ADE7978_SPI_READ(STATUS0, 4) & 32) != 32)
+       {
+          ADE7978_SPI_WRITE(STATUS0,32,4);
+          KWH_LSB = (V_TEST * I_TEST * Power_factor * accumulation_time) / (ADE7978_SPI_READ(AWATTHR,4) * 3600);
+       }
+  */
 
-        Serial.println(" ");
-     }
-  }
 
-//  need to wait for next accumulation time Watthr used for calculation
-  ADE7978_SPI_WRITE(STATUS0,32,4);
-  while( (ADE7978_SPI_READ(STATUS0, 4) & 32) != 32)
-     {
-        ADE7978_SPI_WRITE(STATUS0,32,4);
-        KWH_LSB = (V_TEST * I_TEST * Power_factor * accumulation_time) / (ADE7978_SPI_READ(AWATTHR,4) * 3600);
-     }
+  //Or KWH/LSB can be calculated by using expected values and the signal chain. (watthr over accumulation time) / (calculated watthr register over accumulation time )
+
+  KWH_LSB = ((double)(((V_TEST * I_TEST * Power_factor) / 3600) * accumulation_time) / (((double)(PMAX * Percent_FS_Current * Percent_FS_Voltage  * 1024000 * accumulation_time )) / ((double)(WTHR_Value * pow(2, 27))))); // (watthr over accumulation time) / (calculated watthr register over accumulation time )
+  //Serial.print("calculated KWH/LSB = "); Serial.println(KWH_LSB, 8);
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
   Serial.println("");
-  Serial.print("IRMS_LSB = ");Serial.println(IRMS_LSB,8);
-  Serial.print("VRMS_LSB = ");Serial.println(VRMS_LSB,8);
-  Serial.print("WATT_LSB = ");Serial.println(WATT_LSB,8);
-  Serial.print("KWH_LSB = ");Serial.println(KWH_LSB,8);
+  Serial.print("  IRMS_LSB = "); Serial.println(IRMS_LSB, 8);
+  Serial.print("  VRMS_LSB = "); Serial.println(VRMS_LSB, 8);
+  Serial.print("  WATT_LSB = "); Serial.println(WATT_LSB, 8);
+  Serial.print("  KWH_LSB  = "); Serial.println(KWH_LSB, 8);
   Serial.println("");
 
   delay(10000);
 
-  Serial.print("cf freq measured by micro = "); Serial.print(cf_freq,6); Serial.println(" HZ "); Serial.println("");
+  Serial.print("  Cf Frequency Measured By Micro = "); Serial.print(cf_freq, 6); Serial.println(" HZ "); Serial.println("");
   Serial.println("");
- while(1){
-   if( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
-     {
-        ADE7978_SPI_WRITE(STATUS0,32,4);
-        Serial.print("updated every "); Serial.print(accumulation_time/(1.00/Line_Freq/2)); Serial.println(" half lincycles ");
-        Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS,4) * IRMS_LSB); Serial.println(" IRMS");
-        Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS,4) * VRMS_LSB); Serial.println(" VRMS");
-        Serial.print("  AWATT = "); Serial.print(ADE7978_SPI_READ(AWATT,4)* 16 * WATT_LSB); Serial.println(" WATTS"); //div by 2^4 in figure 79 pg 57
-        //https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf
-        Serial.print("  AWATTHR  "); Serial.print(ADE7978_SPI_READ(AWATTHR,4) * KWH_LSB); Serial.println(" KW/HR");
-        Serial.println(" ");
-     }
+  last_millis = millis();
+  while (1) {
+    if ( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
+    {
+      ADE7978_SPI_WRITE(STATUS0, 32, 4);
+
+      Serial.print("  Updated Every "); Serial.print(accumulation_time / (1.00 / Line_Freq / 2),0); Serial.println(" Half Lincycles ");
+      Serial.println("");
+      Serial.print(millis() - last_millis);
+      last_millis = millis();
+      Serial.println("MilliSeconds \n");
+      Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS, 4) * IRMS_LSB,4); Serial.println(" IRMS");
+      Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS, 4) * VRMS_LSB,4); Serial.println(" VRMS");
+      Serial.print("  AWATT = "); Serial.print(ADE7978_SPI_READ(AWATT, 4) * 16 * WATT_LSB,4); Serial.println(" WATTS"); //div by 2^4 in figure 79 pg 57
+      //https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf
+      Serial.print("  AWATTHR = "); Serial.print(ADE7978_SPI_READ(AWATTHR, 4) * KWH_LSB,4); Serial.println(" KW/HR");
+      Serial.println("");
+    }
   }
- }
+}
 
 void setup() {
   // put your setup code here, to run once:
@@ -536,8 +547,8 @@ void setup() {
    attachInterrupt(digitalPinToInterrupt(CF1),CF1_irq,FALLING); // response about 5.2us
    //attachInterrupt(digitalPinToInterrupt(CF2),CF2_irq,FALLING); // response about 5.2us
    //attachInterrupt(digitalPinToInterrupt(CF3),CF3_irq,FALLING); // response about 5.2us
-   attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
-   attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
+   //attachInterrupt(digitalPinToInterrupt(IRQ0),IRQ0_irq,FALLING); // response about 5.2us
+   //attachInterrupt(digitalPinToInterrupt(IRQ1),IRQ1_irq,FALLING); // response about 5.2us
   //ADE7978_SPI_WRITE(MASK1, 0x200 , 4);  //200 hex = channel a zerocross IRQ
   //Serial.print("MASK1 = ");
   //Serial.println(ADE7978_SPI_READ(MASK1,4), HEX);
