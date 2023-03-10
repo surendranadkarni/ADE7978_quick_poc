@@ -464,7 +464,11 @@ void calibrate_ade7978() {
 
   Serial.print("  Cf Frequency Measured By Micro = "); Serial.print(cf_freq, 6); Serial.println(" HZ "); Serial.println("");
   Serial.println("");
+  auto last_ts_minute = millis();
+  uint32_t samples = 0;
   last_millis = millis();
+  double awatt_accumulated_over_minute = 0.0;
+  double enegrgy_measurement_kwhr = 0.0;
 
   while (1) {
     if ( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
@@ -475,13 +479,20 @@ void calibrate_ade7978() {
       Serial.println("");
       Serial.print(millis() - last_millis);
       last_millis = millis();
+      auto awatt_raw = ADE7978_SPI_READ(AWATT, 4);
+      auto awatt_engineering = awatt_raw * 16.0 * WATT_LSB;
       Serial.println("MilliSeconds \n");
       Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS, 4) * IRMS_LSB,4); Serial.println(" IRMS");
       Serial.print("  AVRMS = "); Serial.print(ADE7978_SPI_READ(AVRMS, 4) * VRMS_LSB,4); Serial.println(" VRMS");
-      Serial.print("  AWATT = "); Serial.print(ADE7978_SPI_READ(AWATT, 4) * 16 * WATT_LSB,4); Serial.println(" WATTS"); //div by 2^4 in figure 79 pg 57
+      Serial.print("  AWATT = "); Serial.print(awatt_engineering); Serial.println(" WATTS"); //div by 2^4 in figure 79 pg 57
       //https://www.analog.com/media/en/technical-documentation/data-sheets/ade7978_7933_7932_7923.pdf
-      Serial.print("  AWATTHR = "); Serial.print(ADE7978_SPI_READ(AWATTHR, 4) * KWH_LSB,4); Serial.println(" KW/HR");
+      //Serial.print("  AWATTHR = "); Serial.print(ADE7978_SPI_READ(AWATTHR, 4) * KWH_LSB,4); Serial.println(" KW/HR");
       Serial.println("");
+      enegrgy_measurement_kwhr += ((awatt_engineering * accumulation_time)/3600.00)/(1000.00);
+      samples = 0;
+      Serial.print("  Energy Measurement updated = "); Serial.print(enegrgy_measurement_kwhr); Serial.println(" KW/HR");
+
+
     }
   }
 }
