@@ -358,8 +358,8 @@ void calibrate_ade7978() {
 
 
   //calculated
-  double Percent_FS_Voltage = (((R2 / (R1 + R2)) * V_TEST) / V_channel_ADC_FS);
-  double Percent_FS_Current = (I_TEST * Shunt_value_in_ohms) / I_channel_ADC_FS;
+  double Percent_FS_Voltage =  0.6231; // (((R2 / (R1 + R2)) * V_TEST) / V_channel_ADC_FS);
+  double Percent_FS_Current =  0.1992; //(I_TEST * Shunt_value_in_ohms) / I_channel_ADC_FS;
   double V_Fullscale = V_TEST / Percent_FS_Voltage;
   double I_Fullscale = I_TEST / Percent_FS_Current;
   double Expected_CF_Freq = (meter_constant / 1000 * V_TEST * I_TEST * Power_factor) / 3600;
@@ -375,9 +375,13 @@ void calibrate_ade7978() {
   // The 205593 comes from setting the  WTHR=3, CFDEN =1, AWATTOS = PMAX = 0x19BDAA7, AIGAIN = AVGAIN = 0xFF800000 , CFMODE= 0x0088, RUN = 0x1 measure CF freq with counter
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   uint16_t CFDEN_CAL_VALUE = (uint16_t)((205953 / WTHR_Value) * Power_factor * Percent_FS_Voltage * Percent_FS_Current) / Expected_CF_Freq;
-  int32_t AIGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Current) / (double)ADE7978_SPI_READ(AIRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
-  int32_t AVGAIN_CAL_VALUE = (int32_t)((((RMS_FS_Codes * Percent_FS_Voltage) / (double)ADE7978_SPI_READ(AVRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
+  int32_t AIGAIN_CAL_VALUE = -2098190; //(int32_t)((((RMS_FS_Codes * Percent_FS_Current) / (double)ADE7978_SPI_READ(AIRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
+  int32_t AVGAIN_CAL_VALUE = -224160; //(int32_t)((((RMS_FS_Codes * Percent_FS_Voltage) / (double)ADE7978_SPI_READ(AVRMS, 4)) - 1) * 8388608); // 2^23 = 8388608
 
+  IRMS_LSB = 0.00001175;
+  VRMS_LSB = 0.00009406;
+  WATT_LSB = 0.00057929;
+  KWH_LSB  = 0.00006327;
 
   Serial.println("");
   Serial.print("  V_TEST Used For Calibration = "); Serial.println(V_TEST);
@@ -461,6 +465,7 @@ void calibrate_ade7978() {
   Serial.print("  Cf Frequency Measured By Micro = "); Serial.print(cf_freq, 6); Serial.println(" HZ "); Serial.println("");
   Serial.println("");
   last_millis = millis();
+
   while (1) {
     if ( (ADE7978_SPI_READ(STATUS0, 4) & 32) == 32)
     {
