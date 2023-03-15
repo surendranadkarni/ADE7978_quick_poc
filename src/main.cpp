@@ -479,7 +479,8 @@ void calibrate_ade7978() {
       Serial.println("");
       Serial.print(millis() - last_millis);
       last_millis = millis();
-      auto awatt_raw = ADE7978_SPI_READ(AWATT, 4);
+      int32_t awatt_raw = static_cast<int32_t>(ADE7978_SPI_READ(AWATT, 4));
+      awatt_raw = (awatt_raw>=0)?awatt_raw:-awatt_raw;
       auto awatt_engineering = awatt_raw * 16.0 * WATT_LSB;
       Serial.println("MilliSeconds \n");
       Serial.print("  AIRMS = "); Serial.print(ADE7978_SPI_READ(AIRMS, 4) * IRMS_LSB,4); Serial.println(" IRMS");
