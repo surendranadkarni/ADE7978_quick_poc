@@ -35,7 +35,7 @@ void ADE7978_reg_config();
 #define PM_1 PIN_A7
 
 #define RESET_B D7
-#define SSB_A D4
+#define SSB_A D2
 
 
 //inputs
@@ -335,8 +335,8 @@ void calibrate_ade7978() {
   delay(10000); //wait for RMS to settle
 
   // enter values
-  double V_TEST = 220.5;//volts RMS
-  double I_TEST = 8.8;//Amps RMS
+  double V_TEST = 220.0;//volts RMS
+  double I_TEST = 9;//Amps RMS
   double Power_factor = 1;
   int meter_constant = 1000;  //1000 imp/Kwh for cf output rate
   int Line_Freq = 50;
@@ -346,7 +346,7 @@ void calibrate_ade7978() {
   double R1 = 1000000; //big resistor or sum of upper resisters
   double R2 = 1000; //small resistor
 
-  double Shunt_value_in_ohms = 0.000500; // for 200uOhms
+  double Shunt_value_in_ohms = 0.000300; // for 200uOhms
 
   //constants
 #define  PMAX 26991271
